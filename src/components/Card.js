@@ -1,10 +1,23 @@
 import React from "react";
+import { useState } from "react";
+import { useEffect } from "react";
 
 const Card = ({ movie }) => {
+  const [isCoupDeCoeur, setIsCoupDeCoeur] = useState(false);
   const dateFormatter = (date) => {
     let [yy, mm, dd] = date.split("-");
     return [dd, mm, yy].join("/");
   };
+
+  useEffect(() => {
+    let storedData = window.localStorage.movies
+      ? window.localStorage.movies.split(",")
+      : [];
+
+    if (storedData.includes(movie.id.toString())) {
+      setIsCoupDeCoeur(true);
+    }
+  }, []);
 
   const genreFinder = () => {
     let genreArray = [];
@@ -73,6 +86,26 @@ const Card = ({ movie }) => {
     }
     return genreArray.map((genre) => <li key={genre}>{genre}</li>);
   };
+
+  const addStorage = () => {
+    let storedData = window.localStorage.movies
+      ? window.localStorage.movies.split(",")
+      : [];
+
+    if (!storedData.includes(movie.id.toString())) {
+      storedData.push(movie.id);
+      setIsCoupDeCoeur(true);
+      window.localStorage.movies = storedData;
+    }
+  };
+
+  const deleteStorage = () => {
+    let storedData = window.localStorage.movies.split(",");
+    let newData = storedData.filter((id) => id != movie.id);
+    window.localStorage.movies = newData;
+    window.location.reload();
+  };
+
   return (
     <div>
       <div className="card">
@@ -93,10 +126,31 @@ const Card = ({ movie }) => {
         <h4>
           {movie.vote_average}/10 <span>⭐</span>
         </h4>
-        <ul>{genreFinder()}</ul>
+        <ul>
+          {movie.genre_ids
+            ? genreFinder()
+            : movie.genres.map((genre) => <li>{genre.name}</li>)}
+        </ul>
         {movie.overview ? <h3>Synopsys : </h3> : ""}
         <p>{movie.overview}</p>
-        <button className="btn">Ajouter aux coups de ❤ </button>
+        {movie.genre_ids ? (
+          isCoupDeCoeur ? (
+            <div className="btn fav">❤</div>
+          ) : (
+            <button
+              className="btn"
+              onClick={() => {
+                addStorage();
+              }}
+            >
+              Ajouter aux coups de ❤{" "}
+            </button>
+          )
+        ) : (
+          <button className="btn" onClick={() => deleteStorage()}>
+            Supprimer de la liste
+          </button>
+        )}
       </div>
     </div>
   );
